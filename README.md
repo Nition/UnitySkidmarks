@@ -8,7 +8,7 @@ Loosely based on a script from an old official Unity car tutorial, but with bett
 
 This repository comes with a sample scene using Unity 5 standard assets for the vehicle and terrain.
 
-![Visualisation example.](https://raw.github.com/nition/UnityOctree/master/octree-visualisation.jpg)
+![Visualisation example.](https://raw.github.com/nition/UnitySkidmarks/master/skid.gif)
 
 The **UnitySkidmarks** folder is the only content required to make the system work on its own.
 
