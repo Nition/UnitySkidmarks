@@ -1,0 +1,7 @@
+*.suo
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+*.sln
+UnitySkidmarks.Plugins.csproj
+*.csproj
