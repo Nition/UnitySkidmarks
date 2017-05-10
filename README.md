@@ -1,5 +1,4 @@
 # UnitySkidmarks
-===========
 
 A basic skidmark system intended for vehicles.
 Originally written for my game [Scraps](http://www.scrapsgame.com) but intended to be general-purpose.
