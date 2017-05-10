@@ -1,0 +1,8 @@
+# EditorConfig: http://EditorConfig.org
+# Works with its Visual Studio plugin
+
+# top-most EditorConfig file
+root = true
+
+[*]
+indent_style = tab

@@ -1,20 +1,24 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
 
-// Skidmarks texture. Only need one of these in a scene somewhere. Call AddSkidMark.
-public class Skidmarks : MonoBehaviour
-{
+// Skidmarks controller. Put one of these in a scene somewhere. Call AddSkidMark.
+// Copyright 2017 Nition, BSD licence (see LICENCE file). http://nition.co
+public class Skidmarks : MonoBehaviour {
 	// INSPECTOR SETTINGS
 
-	// Material for the skidmarks to use
 	[SerializeField]
-	Material skidmarksMaterial;
+	Material skidmarksMaterial; // Material for the skidmarks to use
 
 	// END INSPECTOR SETTINGS
 
-	// Variables for each mark created. Needed to generate the correct mesh.
-	class MarkSection
-	{
+	const int MAX_MARKS = 2048; // Max number of marks total for everyone together
+	const float MARK_WIDTH = 0.35f; // Width of the skidmarks. Should match the width of the wheels
+	const float GROUND_OFFSET = 0.02f;  // Distance above surface in metres
+	const float MIN_DISTANCE = 0.25f; // Distance between skid texture sections in metres. Bigger = better performance, less smooth
+	const float MIN_SQR_DISTANCE = MIN_DISTANCE * MIN_DISTANCE;
+
+	// Info for each mark created. Needed to generate the correct mesh
+	class MarkSection {
 		public Vector3 Pos = Vector3.zero;
 		public Vector3 Normal = Vector3.zero;
 		public Vector4 Tangent = Vector4.zero;
@@ -23,12 +27,6 @@ public class Skidmarks : MonoBehaviour
 		public byte Intensity;
 		public int LastIndex;
 	};
-
-	const int MAX_MARKS = 2048; // Max number of marks total for everyone together
-	const float MARK_WIDTH = 0.35f; // Width of the skidmarks. Should match the width of the wheels
-	const float GROUND_OFFSET = 0.02f;  // Distance above surface in metres
-	const float MIN_DISTANCE = 0.25f; // Distance between points in metres. Bigger = more clunky, straight-line skidmarks
-	const float MIN_SQR_DISTANCE = MIN_DISTANCE * MIN_DISTANCE;
 
 	int markIndex;
 	MarkSection[] skidmarks;
@@ -43,13 +41,13 @@ public class Skidmarks : MonoBehaviour
 	Vector2[] uvs;
 	int[] triangles;
 
-	bool updated;
+	bool meshUpdated;
 	bool haveSetBounds;
 
 	// #### UNITY INTERNAL METHODS ####
 
-	protected void Start()
-	{
+	protected void Start() {
+		// Generate a fixed array of skidmarks
 		skidmarks = new MarkSection[MAX_MARKS];
 		for (int i = 0; i < MAX_MARKS; i++) {
 			skidmarks[i] = new MarkSection();
@@ -57,15 +55,12 @@ public class Skidmarks : MonoBehaviour
 
 		mf = GetComponent<MeshFilter>();
 		mr = GetComponent<MeshRenderer>();
-		if (mr == null)
-		{
+		if (mr == null) {
 			mr = gameObject.AddComponent<MeshRenderer>();
 		}
-
 		marksMesh = new Mesh();
 		marksMesh.MarkDynamic();
-		if (mf == null)
-		{
+		if (mf == null) {
 			mf = gameObject.AddComponent<MeshFilter>();
 		}
 		mf.sharedMesh = marksMesh;
@@ -83,10 +78,9 @@ public class Skidmarks : MonoBehaviour
 		mr.lightProbeUsage = LightProbeUsage.Off;
 	}
 
-	protected void LateUpdate()
-	{
-		if (!updated) return;
-		updated = false;
+	protected void LateUpdate() {
+		if (!meshUpdated) return;
+		meshUpdated = false;
 
 		// Reassign the mesh if it's changed this frame
 		marksMesh.vertices = vertices;
@@ -96,11 +90,10 @@ public class Skidmarks : MonoBehaviour
 		marksMesh.colors32 = colors;
 		marksMesh.uv = uvs;
 
-		if (!haveSetBounds)
-		{
-			// Could use RecalculateBounds here each frame instead, but it uses about 0.1-0.2ms each time.
-			// Save time by just making the mesh bounds huge, so the skidmarks will always draw.
-			// Not sure why I only need to do this once, yet can't do it in Start (it resets to zero).
+		if (!haveSetBounds) {
+			// Could use RecalculateBounds here each frame instead, but it uses about 0.1-0.2ms each time
+			// Save time by just making the mesh bounds huge, so the skidmarks will always draw
+			// Not sure why I only need to do this once, yet can't do it in Start (it resets to zero)
 			marksMesh.bounds = new Bounds(new Vector3(0, 0, 0), new Vector3(10000, 10000, 10000));
 			haveSetBounds = true;
 		}
@@ -110,11 +103,9 @@ public class Skidmarks : MonoBehaviour
 
 	// #### PUBLIC METHODS ####
 
-	// Function called by the wheels that is skidding. Gathers all the information needed to
-	// create the mesh later. Sets the intensity of the skidmark section b setting the alpha
-	// of the vertex color.
-	public int AddSkidMark(Vector3 pos, Vector3 normal, float intensity, int lastIndex)
-	{
+	// Function called by the wheel that's skidding. Sets the intensity of the skidmark section
+	// by setting the alpha of the vertex color
+	public int AddSkidMark(Vector3 pos, Vector3 normal, float intensity, int lastIndex) {
 		if (intensity > 1) intensity = 1.0f;
 		else if (intensity < 0) return -1;
 
@@ -130,8 +121,7 @@ public class Skidmarks : MonoBehaviour
 		curSection.Intensity = (byte)(intensity * 255f);
 		curSection.LastIndex = lastIndex;
 
-		if (lastIndex != -1)
-		{
+		if (lastIndex != -1) {
 			MarkSection lastSection = skidmarks[lastIndex];
 			Vector3 dir = (curSection.Pos - lastSection.Pos);
 			Vector3 xDir = Vector3.Cross(dir, normal).normalized;
@@ -140,8 +130,7 @@ public class Skidmarks : MonoBehaviour
 			curSection.Posr = curSection.Pos - xDir * MARK_WIDTH * 0.5f;
 			curSection.Tangent = new Vector4(xDir.x, xDir.y, xDir.z, 1);
 
-			if (lastSection.LastIndex == -1)
-			{
+			if (lastSection.LastIndex == -1) {
 				lastSection.Tangent = curSection.Tangent;
 				lastSection.Posl = curSection.Pos + xDir * MARK_WIDTH * 0.5f;
 				lastSection.Posr = curSection.Pos - xDir * MARK_WIDTH * 0.5f;
@@ -160,8 +149,7 @@ public class Skidmarks : MonoBehaviour
 	// #### PROTECTED/PRIVATE METHODS ####
 
 	// Update part of the mesh for the current markIndex
-	void UpdateSkidmarksMesh()
-	{
+	void UpdateSkidmarksMesh() {
 		MarkSection curr = skidmarks[markIndex];
 
 		// Nothing to connect to yet
@@ -201,6 +189,6 @@ public class Skidmarks : MonoBehaviour
 		triangles[markIndex * 6 + 5] = markIndex * 4 + 1;
 		triangles[markIndex * 6 + 4] = markIndex * 4 + 3;
 
-		updated = true;
+		meshUpdated = true;
 	}
 }
