@@ -23,11 +23,17 @@ public class WheelSkid : MonoBehaviour {
 	const float MAX_SKID_INTENSITY = 20.0f; // m/s where skid opacity is at full intensity
 	const float WHEEL_SLIP_MULTIPLIER = 10.0f; // For wheelspin. Adjust how much skids show
 	int lastSkid = -1; // Array index for the skidmarks controller. Index of last skidmark piece this wheel used
+	float lastFixedUpdateTime;
 
 	// #### UNITY INTERNAL METHODS ####
 
 	protected void Awake() {
 		wheelCollider = GetComponent<WheelCollider>();
+		lastFixedUpdateTime = Time.time;
+	}
+
+	protected void FixedUpdate() {
+		lastFixedUpdateTime = Time.time;
 	}
 
 	protected void LateUpdate() {
@@ -53,10 +59,10 @@ public class WheelSkid : MonoBehaviour {
 			skidTotal += wheelSpin;
 
 			// Skid if we should
-
 			if (skidTotal >= SKID_FX_SPEED) {
 				float intensity = Mathf.Clamp01(skidTotal / MAX_SKID_INTENSITY);
-				Vector3 skidPoint = wheelHitInfo.point + (rb.velocity * Time.fixedDeltaTime);
+				// Account for further movement since the last FixedUpdate
+				Vector3 skidPoint = wheelHitInfo.point + (rb.velocity * (Time.time - lastFixedUpdateTime));
 				lastSkid = skidmarksController.AddSkidMark(skidPoint, wheelHitInfo.normal, intensity, lastSkid);
 			}
 			else {
