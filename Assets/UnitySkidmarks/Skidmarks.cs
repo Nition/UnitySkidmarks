@@ -46,6 +46,14 @@ public class Skidmarks : MonoBehaviour {
 
 	// #### UNITY INTERNAL METHODS ####
 
+	protected void Awake() {
+		if (transform.position != Vector3.zero) {
+			Debug.LogWarning("Skidmarks.cs transform must be at 0,0,0. Setting it to zero now.");
+			transform.position = Vector3.zero;
+			transform.rotation = Quaternion.identity;
+		}
+	}
+
 	protected void Start() {
 		// Generate a fixed array of skidmarks
 		skidmarks = new MarkSection[MAX_MARKS];
