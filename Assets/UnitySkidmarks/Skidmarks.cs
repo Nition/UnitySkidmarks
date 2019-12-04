@@ -45,6 +45,8 @@ public class Skidmarks : MonoBehaviour {
 	bool meshUpdated;
 	bool haveSetBounds;
 
+	Color32 black = Color.black;
+
 	// #### UNITY INTERNAL METHODS ####
 
 	protected void Awake() {
@@ -117,7 +119,9 @@ public class Skidmarks : MonoBehaviour {
 	public int AddSkidMark(Vector3 pos, Vector3 normal, float opacity, int lastIndex) {
 		if (opacity > 1) opacity = 1.0f;
 		else if (opacity < 0) return -1;
-		return AddSkidMark(pos, normal, new Color32(0, 0, 0, (byte)(opacity * 255)), lastIndex);
+
+		black.a = (byte)(opacity * 255);
+		return AddSkidMark(pos, normal, black, lastIndex);
 	}
 
 	// Function called by the wheel that's skidding. Sets the colour and intensity of the skidmark section.
