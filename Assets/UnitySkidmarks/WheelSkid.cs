@@ -54,7 +54,7 @@ public class WheelSkid : MonoBehaviour {
 			// NOTE: This extra line should not be needed and you can take it out if you have decent wheel physics
 			// The built-in Unity demo car is actually skidding its wheels the ENTIRE time you're accelerating,
 			// so this fades out the wheelspin-based skid as speed increases to make it look almost OK
-			wheelSpin = Mathf.Max(0, wheelSpin * (10 - carForwardVel));
+			wheelSpin = Mathf.Max(0, wheelSpin * (10 - Mathf.Abs(carForwardVel)));
 
 			skidTotal += wheelSpin;
 
