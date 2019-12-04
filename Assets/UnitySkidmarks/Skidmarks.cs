@@ -16,6 +16,7 @@ public class Skidmarks : MonoBehaviour {
 	const float GROUND_OFFSET = 0.02f;  // Distance above surface in metres
 	const float MIN_DISTANCE = 0.25f; // Distance between skid texture sections in metres. Bigger = better performance, less smooth
 	const float MIN_SQR_DISTANCE = MIN_DISTANCE * MIN_DISTANCE;
+	const float MAX_OPACITY = 1.0f; // Max skidmark opacity
 
 	// Info for each mark created. Needed to generate the correct mesh
 	class MarkSection {
@@ -24,7 +25,7 @@ public class Skidmarks : MonoBehaviour {
 		public Vector4 Tangent = Vector4.zero;
 		public Vector3 Posl = Vector3.zero;
 		public Vector3 Posr = Vector3.zero;
-		public byte Intensity;
+		public Color32 Colour;
 		public int LastIndex;
 	};
 
@@ -66,6 +67,7 @@ public class Skidmarks : MonoBehaviour {
 		if (mr == null) {
 			mr = gameObject.AddComponent<MeshRenderer>();
 		}
+
 		marksMesh = new Mesh();
 		marksMesh.MarkDynamic();
 		if (mf == null) {
@@ -111,22 +113,29 @@ public class Skidmarks : MonoBehaviour {
 
 	// #### PUBLIC METHODS ####
 
-	// Function called by the wheel that's skidding. Sets the intensity of the skidmark section
-	// by setting the alpha of the vertex color
-	public int AddSkidMark(Vector3 pos, Vector3 normal, float intensity, int lastIndex) {
-		if (intensity > 1) intensity = 1.0f;
-		else if (intensity < 0) return -1;
+	// Function called by the wheel that's skidding. Sets the intensity of the skidmark section, in the default black.
+	public int AddSkidMark(Vector3 pos, Vector3 normal, float opacity, int lastIndex) {
+		if (opacity > 1) opacity = 1.0f;
+		else if (opacity < 0) return -1;
+		return AddSkidMark(pos, normal, new Color32(0, 0, 0, (byte)(opacity * 255)), lastIndex);
+	}
 
+	// Function called by the wheel that's skidding. Sets the colour and intensity of the skidmark section.
+	public int AddSkidMark(Vector3 pos, Vector3 normal, Color32 colour, int lastIndex) {
+		if (colour.a == 0) return -1; // No point in continuing if it's invisible		
+		
 		if (lastIndex > 0) {
 			float sqrDistance = (pos - skidmarks[lastIndex].Pos).sqrMagnitude;
 			if (sqrDistance < MIN_SQR_DISTANCE) return lastIndex;
 		}
 
+		colour.a = (byte)(colour.a * MAX_OPACITY);
+
 		MarkSection curSection = skidmarks[markIndex];
 
 		curSection.Pos = pos + normal * GROUND_OFFSET;
 		curSection.Normal = normal;
-		curSection.Intensity = (byte)(intensity * 255f);
+		curSection.Colour = colour;
 		curSection.LastIndex = lastIndex;
 
 		if (lastIndex != -1) {
@@ -179,10 +188,10 @@ public class Skidmarks : MonoBehaviour {
 		tangents[markIndex * 4 + 2] = curr.Tangent;
 		tangents[markIndex * 4 + 3] = curr.Tangent;
 
-		colors[markIndex * 4 + 0] = new Color32(0, 0, 0, last.Intensity);
-		colors[markIndex * 4 + 1] = new Color32(0, 0, 0, last.Intensity);
-		colors[markIndex * 4 + 2] = new Color32(0, 0, 0, curr.Intensity);
-		colors[markIndex * 4 + 3] = new Color32(0, 0, 0, curr.Intensity);
+		colors[markIndex * 4 + 0] = last.Colour;
+		colors[markIndex * 4 + 1] = last.Colour;
+		colors[markIndex * 4 + 2] = curr.Colour;
+		colors[markIndex * 4 + 3] = curr.Colour;
 
 		uvs[markIndex * 4 + 0] = new Vector2(0, 0);
 		uvs[markIndex * 4 + 1] = new Vector2(1, 0);
