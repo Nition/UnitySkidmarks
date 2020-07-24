@@ -130,6 +130,7 @@ public class Skidmarks : MonoBehaviour {
 
 		MarkSection lastSection = null;
 		Vector3 distAndDirection = Vector3.zero;
+		Vector3 newPos = pos + normal * GROUND_OFFSET;
 		if (lastIndex != -1) {
 			lastSection = skidmarks[lastIndex];
 			distAndDirection = newPos - lastSection.Pos;
