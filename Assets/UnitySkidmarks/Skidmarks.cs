@@ -126,35 +126,46 @@ public class Skidmarks : MonoBehaviour {
 
 	// Function called by the wheel that's skidding. Sets the colour and intensity of the skidmark section.
 	public int AddSkidMark(Vector3 pos, Vector3 normal, Color32 colour, int lastIndex) {
-		if (colour.a == 0) return -1; // No point in continuing if it's invisible		
-		
-		if (lastIndex > 0) {
-			float sqrDistance = (pos - skidmarks[lastIndex].Pos).sqrMagnitude;
-			if (sqrDistance < MIN_SQR_DISTANCE) return lastIndex;
+		if (colour.a == 0) return -1; // No point in continuing if it's invisible	
+
+		MarkSection lastSection = null;
+		Vector3 distAndDirection = Vector3.zero;
+		if (lastIndex != -1) {
+			lastSection = skidmarks[lastIndex];
+			distAndDirection = newPos - lastSection.Pos;
+			if (distAndDirection.sqrMagnitude < MIN_SQR_DISTANCE) {
+				return lastIndex;
+			}
+			// Fixes an awkward bug:
+			// - Car draws skidmark, e.g. index 50 with last index 40.
+			// - Skidmark markIndex loops around, and other car overwrites index 50
+			// - Car draws skidmark, e.g. index 45. Last index was 40, but now 40 is different, changed by someone else.
+			// This makes sure we ignore the last index if the distance looks wrong
+			if (distAndDirection.sqrMagnitude > MIN_SQR_DISTANCE * 10) {
+				lastIndex = -1;
+				lastSection = null;
+			}
 		}
 
 		colour.a = (byte)(colour.a * MAX_OPACITY);
 
 		MarkSection curSection = skidmarks[markIndex];
 
-		curSection.Pos = pos + normal * GROUND_OFFSET;
+		curSection.Pos = newPos;
 		curSection.Normal = normal;
 		curSection.Colour = colour;
 		curSection.LastIndex = lastIndex;
 
-		if (lastIndex != -1) {
-			MarkSection lastSection = skidmarks[lastIndex];
-			Vector3 dir = (curSection.Pos - lastSection.Pos);
-			Vector3 xDir = Vector3.Cross(dir, normal).normalized;
-
-			curSection.Posl = curSection.Pos + xDir * MARK_WIDTH * 0.5f;
-			curSection.Posr = curSection.Pos - xDir * MARK_WIDTH * 0.5f;
-			curSection.Tangent = new Vector4(xDir.x, xDir.y, xDir.z, 1);
+		if (lastSection != null) {
+			Vector3 xDirection = Vector3.Cross(distAndDirection, normal).normalized;
+			curSection.Posl = curSection.Pos + xDirection * MARK_WIDTH * 0.5f;
+			curSection.Posr = curSection.Pos - xDirection * MARK_WIDTH * 0.5f;
+			curSection.Tangent = new Vector4(xDirection.x, xDirection.y, xDirection.z, 1);
 
 			if (lastSection.LastIndex == -1) {
 				lastSection.Tangent = curSection.Tangent;
-				lastSection.Posl = curSection.Pos + xDir * MARK_WIDTH * 0.5f;
-				lastSection.Posr = curSection.Pos - xDir * MARK_WIDTH * 0.5f;
+				lastSection.Posl = curSection.Pos + xDirection * MARK_WIDTH * 0.5f;
+				lastSection.Posr = curSection.Pos - xDirection * MARK_WIDTH * 0.5f;
 			}
 		}
 
