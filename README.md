@@ -3,7 +3,7 @@ Please note: This repository is no longer maintained.
 # UnitySkidmarks
 
 A basic skidmark system intended for vehicles.
-Originally written for my game [Scraps](http://www.scrapsgame.com) but intended to be general-purpose.
+Originally written for my game Scraps: Modular Vehicle Combat but intended to be general-purpose.
 
 UnitySkidmarks is loosely based on a script from an old official Unity car tutorial, but with improved performance and zero garbage generation.
 
