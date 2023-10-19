@@ -173,8 +173,6 @@ public class Skidmarks : MonoBehaviour {
 		UpdateSkidmarksMesh();
 
 		int curIndex = markIndex;
-		// Update circular index
-		markIndex = ++markIndex % MAX_MARKS;
 		if (lastIndex == -1) {
 			markIndex = (markIndex - 1 + MAX_MARKS) % MAX_MARKS;
 		}
