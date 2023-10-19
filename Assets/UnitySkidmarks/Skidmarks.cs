@@ -175,7 +175,12 @@ public class Skidmarks : MonoBehaviour {
 		int curIndex = markIndex;
 		// Update circular index
 		markIndex = ++markIndex % MAX_MARKS;
-
+		if (lastIndex == -1) {
+			markIndex = (markIndex - 1 + MAX_MARKS) % MAX_MARKS;
+		}
+		else {
+			markIndex = ++markIndex % MAX_MARKS;
+		}
 		return curIndex;
 	}
 
